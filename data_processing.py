@@ -4,12 +4,13 @@ from PIL import Image
 import os
 import fnmatch
 import numpy as np
-import pandas as pd
+from nltk.tokenize import RegexpTokenizer
+import torch
 
 
-class DataProcessing:
+class Processor:
     """
-    Class to Process the Data
+    Class to Process the Textual Data
 
     Methods
     -------
@@ -24,49 +25,50 @@ class DataProcessing:
         """
         self.data = {}
         self.punctuations = string.punctuation
-        self.embedding_dictionary = {}
+        self.tokenizer = RegexpTokenizer(r'\w+')
+        self.glove_dir = "/Users/ayush/Downloads/glove/glove.6B.200d.txt"
+        self.caption_file_path = "/Users/ayush/Downloads/captions.txt"
+        self.word_embeddings = self.word_vec_reader()
+
+    def word_vec_reader(self):
+        print('Reading Glove Vectors')
+        glove_vecs = {}
+        with open(self.glove_dir, encoding="utf-8", mode='r') as file:  # open the file
+            for line in file.readlines():
+                line = line.replace("\n", "").split(" ")
+                glove_vecs[line[0]] = [float(i) for i in line[1:]]
+        return glove_vecs
 
     def caption_reader(self):
         """
         read data into dictionary from txt/csv file
         """
         # hardcoded path change in future
-        caption_file_path = "/Users/revagupta/Documents/UTD/Second Sem/CS-6375 ML/ML_Project/captions.txt"
-        with open(caption_file_path, mode='r') as file:  # open the file
+        with open(self.caption_file_path, mode='r') as file:  # open the file
             reader = csv.reader(file)  # read the file
             next(reader)  # ignore header line
             for row in reader:  # add data to dictionary
                 if row[0] not in self.data:
                     self.data[row[0]] = {'captions': list()}
-                self.data[row[0]]['captions'].append(self.clean_captions(row[1]))
+                self.data[row[0]]['captions'].append(self.vectoriser(row[1]))
 
-    def clean_captions(self, caption):
+    def vectoriser(self, caption):
         """
         cleaning data
         :param caption: caption to be cleaned
         :return: cleaned caption
         """
-        word_list = caption.lower().split()  # tokenize
-        word_list = [word for word in word_list if len(word) > 1]  # remove hanging words
-        for punctuation in self.punctuations:  # remove punctuations
-            if punctuation in word_list:
-                word_list.remove(punctuation)
-        return ' '.join(word_list)
+        # tokenizing the sentence
+        word_list = self.tokenizer.tokenize(caption.lower())
+        # remove hanging words
+        word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
+        return word_list
 
-    # def word_embedding(self):
-    #     """
-    #
-    #     """
-    #     glove_dir = "/Users/revagupta/Documents/UTD/Second Sem/CS-6375 ML/ML_Project/glove/glove.6B.200d.txt"
-    #     with open(glove_dir, encoding="utf-8", mode='r') as file: # open the file
-    #         reader = csv.reader(file)  # read the file
-    #         for row in reader:
-    #             print(row)
-    #             # row = row[0].split()
-    #             # print(row)
-    #             # word = row[0]
-    #             # coef = np.asarray(row[1:], dtype='float32')
-    #             # self.embedding_dictionary[word] = coef
+    def get_word_embedding(self, word):
+        if word in self.word_embeddings:
+            return torch.Tensor(self.word_embeddings[word])
+        print('  Word not found: ' + word)
+        return torch.zeros(1,1,100)
 
     def process_images(self):
         """
@@ -77,14 +79,6 @@ class DataProcessing:
         for file in os.listdir(image_folder_path):  # Pick list of images
             if fnmatch.fnmatch(file, "*.jpg"):  # check if the file is a jpg file
                 image = Image.open(image_folder_path + "/" + file)  # opening the file
-                image = np.asarray(image)   # converting image into array
+                image = np.asarray(image)  # converting image into array
                 image_resize = np.resize(image, (224, 224, 3))  # reshaping the image
                 self.data[file]["image_vector"] = image_resize  # storing the image in the dictionary
-
-
-if __name__ == "__main__":
-    data_processing = DataProcessing()
-    print("Processing Captions")
-    data_processing.caption_reader()
-    print("Processing Images")
-    data_processing.process_images()

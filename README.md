@@ -4,3 +4,7 @@
     2. Nikita Maruti Chorghe
     3. Reva Gupta
     4. Sayan Das
+
+## Installation 
+
+## Running the program
