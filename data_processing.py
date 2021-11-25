@@ -68,7 +68,7 @@ class Processor:
         if word in self.word_embeddings:
             return torch.Tensor(self.word_embeddings[word])
         print('  Word not found: ' + word)
-        return torch.zeros(1,1,100)
+        return torch.zeros(1, 1, 100)
 
     def process_images(self):
         """
@@ -81,4 +81,5 @@ class Processor:
                 image = Image.open(image_folder_path + "/" + file)  # opening the file
                 image = np.asarray(image)  # converting image into array
                 image_resize = np.resize(image, (224, 224, 3))  # reshaping the image
+                image_resize = np.true_divide(image_resize, 255)   # returns the true division of the input
                 self.data[file]["image_vector"] = image_resize  # storing the image in the dictionary
