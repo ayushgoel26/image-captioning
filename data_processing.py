@@ -32,7 +32,7 @@ class Processor:
 
     def word_vec_reader(self):
         print('Reading Glove Vectors')
-        glove_vecs = {}
+        glove_vecs = {"startseq": np.full(100, 1), "endseq": np.full(100, -1)}
         with open(self.glove_dir, encoding="utf-8", mode='r') as file:  # open the file
             for line in file.readlines():
                 line = line.replace("\n", "").split(" ")
@@ -60,6 +60,9 @@ class Processor:
         """
         # tokenizing the sentence
         word_list = self.tokenizer.tokenize(caption.lower())
+        word_list.append("endseq")
+        word_list.insert(0, "startseq")
+        print(word_list)
         # remove hanging words
         word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
         return word_list

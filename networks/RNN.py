@@ -11,19 +11,20 @@ class RNN(object):
 
     def forward(self, input_rnn):
         lstm_out, hidden = self.rnn(input_rnn)
-        return lstm_out[:, -1, :]
+        return lstm_out, hidden
 
     def model_train(self, epochs, learning_rate, data):
         print('Training')
         loss_fn = torch.nn.CrossEntropyLoss()
-        optimiser = optim.Adam(self.model.parameters(), lr=learning_rate)
+        optimiser = optim.Adam(self.rnn.parameters(), lr=learning_rate)
         for epoch in range(epochs):
             total_loss = 0.0
             for sent_len in data:
                 optimiser.zero_grad()
-                y_pred = self.forward(self.data[sent_len]['sentences'].float())
+                # y_pred, hidden_out = self.forward(data[sent_len]['captions'][0].float())
+                y_pred, hidden_out = self.forward(torch.rand(25088))
                 loss = loss_fn(torch.squeeze(y_pred, 1),
-                               torch.squeeze(torch.squeeze(self.data[sent_len]['labels'], 1), 1).long())
+                               torch.squeeze(torch.squeeze(data[sent_len]['captions'][0], 1), 1))
                 loss.backward()
                 optimiser.step()
                 total_loss += loss.item()
@@ -31,6 +32,11 @@ class RNN(object):
                 print('epoch: %d, loss: %.3f' % (epoch, total_loss))
         print('Finished Training')
 
-    def test(self, sentence):
-        y_pred = self.forward(sentence.float())
-        print(self.out[torch.argmax(y_pred).item()])
+
+rnn = RNN(input_dim=25088, hidden_rnn_dim=30000)
+from data_processing import Processor
+processor = Processor()
+print("Processing Captions")
+processor.caption_reader()
+print("Captions processed")
+rnn.model_train(1, 0.01, processor.data)
