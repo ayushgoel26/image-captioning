@@ -6,7 +6,13 @@ class Convolution:
 
     def __init__(self, in_channels, out_channels, kernel_size):
         self.depth = out_channels
+
+        '''
+        kernel has 4 dimensions : output depth (out_channels) * input_depth (in_channels) * kernel_size * kernel_size
+        '''
         self.kernels_shape = (self.depth, in_channels, kernel_size, kernel_size)
+
+        '''initializing random values to kernel'''
         self.kernels = np.random.randn(*self.kernels_shape)
         self.input = None
         self.input_depth = None
@@ -24,6 +30,7 @@ class Convolution:
         self.output_shape = (self.depth, input_height - self.kernels_shape[2] + 1,
                              input_width - self.kernels_shape[3] + 1)
         self.biases = np.random.randn(*self.output_shape)
+
         output = np.copy(self.biases)
 
         for i in range(self.depth):
