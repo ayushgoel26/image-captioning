@@ -25,7 +25,7 @@ downloaded.GetContentFile('results.csv')
 downloaded = drive.CreateFile({'id':"1vDJYsj8HRcMVK67TbNqma2GddW9otC4m"})   # get images
 downloaded.GetContentFile('images.zip')
 
-!unzip images1.zip
+!unzip images.zip
 """"""""""""""""""""""""""""""""""""""""""""
 
 
