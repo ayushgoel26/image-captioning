@@ -6,6 +6,7 @@ import fnmatch
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
 import torch
+from gensim.models import Word2Vec
 
 
 class Processor:
@@ -27,8 +28,11 @@ class Processor:
         self.punctuations = string.punctuation
         self.tokenizer = RegexpTokenizer(r'\w+')
         self.glove_dir = "/Users/ayush/Downloads/glove/glove.6B.200d.txt"
-        self.caption_file_path = "/Users/ayush/Downloads/captions.txt"
-        self.word_embeddings = self.word_vec_reader()
+        self.caption_file_path = "/Users/revagupta/Documents/UTD/Second Sem/CS-6375 ML/ML_Project/captions.txt"
+        # self.word_embeddings = self.word_vec_reader()
+        self.captions_list = []
+        self.vocabulary = None
+        self.model = None
 
     def word_vec_reader(self):
         print('Reading Glove Vectors')
@@ -50,9 +54,46 @@ class Processor:
             for row in reader:  # add data to dictionary
                 if row[0] not in self.data:
                     self.data[row[0]] = {'captions': list()}
-                self.data[row[0]]['captions'].append(self.vectoriser(row[1]))
+                word_list = self.clean_caption(row[1])
+                self.captions_list.append(word_list)
+                self.data[row[0]]['captions'].append(word_list)
+        self.word_to_vector()
+        self.vectoriser()
 
-    def vectoriser(self, caption):
+    def word_to_vector(self):
+        """
+        Learning word embedding from our text corpus
+        """
+        # defining a model; minimum count -> words that occur less than this count will be ignored
+        self.model = Word2Vec(self.captions_list, min_count=1)
+        print("Word to Vector model ->", self.model)
+        self.vocabulary = list(self.model.wv.vocab)
+        print("Vocabulary length ->", len(self.vocabulary))
+        self.model.save('model.bin')    # save the word to vector model
+        # self.visualize_word_embedding()
+
+    def visualize_word_embedding(self):
+        """
+        Visualize the trained word to vector
+        """
+        from sklearn.decomposition import PCA
+        from matplotlib import pyplot
+        # fit a 2d PCA model to the vectors
+        x_axis = self.model[self.model.wv.vocab]
+        pca = PCA(n_components=2)
+        result = pca.fit_transform(x_axis)
+        # create a scatter plot of the prediction
+        pyplot.scatter(result[:, 0], result[:, 1])
+        for i, word in enumerate(self.vocabulary):
+            pyplot.annotate(word, xy=(result[i, 0], result[i, 1]))
+        pyplot.show()
+
+    def vectoriser(self):
+        for key in self.data:
+            for index in range(len(self.data[key]['captions'])):
+                self.data[key]['captions'][index] = [self.get_word_embedding(word) for word in self.data[key]['captions'][index]]
+
+    def clean_caption(self, caption):
         """
         cleaning data
         :param caption: caption to be cleaned
@@ -62,14 +103,17 @@ class Processor:
         word_list = self.tokenizer.tokenize(caption.lower())
         word_list.append("endseq")
         word_list.insert(0, "startseq")
-        print(word_list)
-        # remove hanging words
-        word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
+        # remove hanging words and punctuations
+        # word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
+        word_list = [word for word in word_list if len(word) > 1 or word not in self.punctuations]
+        # print(word_list)
         return word_list
 
     def get_word_embedding(self, word):
-        if word in self.word_embeddings:
-            return torch.Tensor(self.word_embeddings[word])
+        # if word in self.word_embeddings:
+        #     return torch.Tensor(self.word_embeddings[word])
+        if word in self.vocabulary:
+            return torch.Tensor(self.model[word])
         print('  Word not found: ' + word)
         return torch.zeros(1, 1, 100)
 
@@ -84,5 +128,5 @@ class Processor:
                 image = Image.open(image_folder_path + "/" + file)  # opening the file
                 image = np.asarray(image)  # converting image into array
                 image_resize = np.resize(image, (224, 224, 3))  # reshaping the image
-                image_resize = np.true_divide(image_resize, 255)   # returns the true division of the input
+                image_resize = np.true_divide(image_resize, 255)  # returns the true division of the input
                 self.data[file]["image_vector"] = image_resize  # storing the image in the dictionary
