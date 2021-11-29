@@ -1,12 +1,13 @@
 import csv
 import string
 from PIL import Image
-import os
 import fnmatch
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
 import torch
 from gensim.models import Word2Vec
+import glob
+from keras.utils import np_utils
 
 
 class Processor:
@@ -28,7 +29,7 @@ class Processor:
         self.punctuations = string.punctuation
         self.tokenizer = RegexpTokenizer(r'\w+')
         self.glove_dir = "/Users/ayush/Downloads/glove/glove.6B.200d.txt"
-        self.caption_file_path = "/Users/revagupta/Documents/UTD/Second Sem/CS-6375 ML/ML_Project/captions.txt"
+        self.caption_file_path = "/content/results.csv"
         # self.word_embeddings = self.word_vec_reader()
         self.captions_list = []
         self.vocabulary = None
@@ -52,11 +53,20 @@ class Processor:
             reader = csv.reader(file)  # read the file
             next(reader)  # ignore header line
             for row in reader:  # add data to dictionary
-                if row[0] not in self.data:
-                    self.data[row[0]] = {'captions': list()}
-                word_list = self.clean_caption(row[1])
+                # row[0] itself has all the fields hence need to split wrt '|'
+                # eg row[0] = 1000092795.jpg| 0| Two young guys with shaggy hair look at their hands while hanging out in the yard .
+                line = row[0].split('|')
+                # in some cases split doesnt create length 3 meaning bad data
+                if len(line) < 3:
+                    continue  # hence skipping
+                # extract 1000092795.jpg from row[0]
+                file_name = line[0]
+                caption = line[2]
+                if file_name not in self.data:
+                    self.data[file_name] = {'captions': list()}
+                word_list = self.clean_caption(caption)
                 self.captions_list.append(word_list)
-                self.data[row[0]]['captions'].append(word_list)
+                self.data[file_name]['captions'].append(word_list)
         self.word_to_vector()
         self.vectoriser()
 
@@ -122,11 +132,35 @@ class Processor:
         Read the images, change its dimension and store in dictionary
         """
         # hardcoded path change in future
-        image_folder_path = "/Users/revagupta/Documents/UTD/Second Sem/CS-6375 ML/ML_Project/Images"
-        for file in os.listdir(image_folder_path):  # Pick list of images
+        image_folder_path = "/content/images/*.jpg"
+        # sample file path will be /content/images/24343.jpg
+        for file in glob.glob(image_folder_path):  # Pick list of images
+            # file will be path : /content/images/24343.jpg
             if fnmatch.fnmatch(file, "*.jpg"):  # check if the file is a jpg file
-                image = Image.open(image_folder_path + "/" + file)  # opening the file
-                image = np.asarray(image)  # converting image into array
-                image_resize = np.resize(image, (224, 224, 3))  # reshaping the image
-                image_resize = np.true_divide(image_resize, 255)  # returns the true division of the input
-                self.data[file]["image_vector"] = image_resize  # storing the image in the dictionary
+                image = Image.open(file)  # opening the file
+                image = np.asarray(image)   # converting image into array
+                # reshaping the image , d * h * w, small change instead of h * w * d
+                image_resize = np.resize(image, (3, 112, 112))
+                image_resize = np.true_divide(image_resize, 255)    # normalization : diving values by 255
+                # extract 24343.jpg from /content/images/24343.jpg
+                file_name = file.split('/')[3]
+                # file_name = (int)(id.split('.')[0])
+                # self.data[id] = {}
+                self.data[file_name] = {'images': (list())}
+                # key : 24343.jpg , 'images' will be image matrix
+                self.data[file_name]['images'].append(image_resize)  # storing the image in the dictionary
+
+    def preprocess_data_mnist(self, x, y, limit):
+        """
+        This returns processed training data for MNIST
+        """
+        zero_index = np.where(y == 0)[0][:limit]
+        one_index = np.where(y == 1)[0][:limit]
+        all_indices = np.hstack((zero_index, one_index))
+        all_indices = np.random.permutation(all_indices)
+        x, y = x[all_indices], y[all_indices]
+        x = x.reshape(len(x), 1, 28, 28)
+        x = x.astype("float32") / 255
+        y = np_utils.to_categorical(y)
+        y = y.reshape(2, len(y))
+        return x, y
