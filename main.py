@@ -3,8 +3,30 @@ from networksimport TrainData
 from networks.Convolution import Convolution
 from networks.Convolution import Flatten
 from networks.Convolution import Maxpool
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+from google.colab import auth
+from oauth2client.client import GoogleCredentials
 
 
+
+"""getting captions and images from drive"""
+
+auth.authenticate_user()
+gauth = GoogleAuth()
+gauth.credentials = GoogleCredentials.get_application_default()
+drive = GoogleDrive(gauth)
+
+
+
+downloaded = drive.CreateFile({'id':"1ZyaOYHhL6jwzduBwDZgZLyAXlzqOBOnx"})   # get captions
+downloaded.GetContentFile('results.csv')  
+
+downloaded = drive.CreateFile({'id':"1vDJYsj8HRcMVK67TbNqma2GddW9otC4m"})   # get images
+downloaded.GetContentFile('images.zip')
+
+!unzip images1.zip
+""""""""""""""""""""""""""""""""""""""""""""
 
 
 processor = Processor()
