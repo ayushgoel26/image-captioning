@@ -146,9 +146,9 @@ class Processor:
                 file_name = file.split('/')[3]
                 # file_name = (int)(id.split('.')[0])
                 # self.data[id] = {}
-                self.data[file_name] = {'images': (list())}
+                self.data[file_name] = {'image': (list())}
                 # key : 24343.jpg , 'images' will be image matrix
-                self.data[file_name]['images'].append(image_resize)  # storing the image in the dictionary
+                self.data[file_name]['image'].append(image_resize)  # storing the image in the dictionary
 
     def preprocess_data_mnist(self, x, y, limit):
         """
