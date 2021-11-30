@@ -40,11 +40,14 @@ class CaptionGenerator:
                                                kernel_size=CONVOLUTION_K_SIZE, padding=CONVOLUTION_PADDING,
                                                stride=CONVOLUTION_STRIDE, input_shape=input_shapes[4])
         self.rnn = nn.LSTM(INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN, batch_first=True)
+        self.linear = nn.Linear(HIDDEN_DIMENSION_RNN, INPUT_DIMENSION_RNN)
         self.flatten = Flatten()
         self.learning_rate = LEARNING_RATE
         self.training_data = TrainData()
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(0.5)
 
-    def forward(self, image_vector, caption_vector):
+    def forward(self, image_vector):
         conv_out = self.convolution_layer_1.forward(image_vector)
         conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_1.forward(conv_out)
@@ -65,9 +68,10 @@ class CaptionGenerator:
         max_pool_out = self.max_pool_layer_4.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
         cnn_out = self.flatten.forward(self.convolution_layer_5.forward(max_pool_out))
-
-        lstm_out, hidden = self.rnn(input=caption_vector, hidden=cnn_out)
-        return lstm_out, hidden
+        # lstm_out, hidden = self.rnn(caption_vector.float(), (torch.from_numpy(cnn_out).unsqueeze(0).float(),
+        #                                                      torch.from_numpy(cnn_out).unsqueeze(0).float()))
+        # lstm_out = self.linear(lstm_out)
+        return cnn_out
 
     def backward(self, compressed_image_vector):
         derivative = self.convolution_layer_5.backward(self.flatten.backward(compressed_image_vector),
@@ -89,19 +93,38 @@ class CaptionGenerator:
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
         self.convolution_layer_1.backward(derivative, self.learning_rate)
 
-    def train(self, data, iterations):
+    def train_cnn(self):
+        training_data = TrainData()
+        x_train, y_train = training_data.getTrainData()
+        error = 0
+        for x, y in zip(x_train, y_train):
+            predicted_output = self.forward(x)
+            error += training_data.binary_cross_entropy(y, predicted_output)
+            grad = training_data.binary_cross_entropy_prime(y, predicted_output)
+            self.backward(grad)
+            break
+
+    def train_rnn(self, data, iterations):
         error = 0
         loss_fn = torch.nn.CrossEntropyLoss()
         optimiser = optim.Adam(self.rnn.parameters(), lr=LEARNING_RATE)
         for iteration in range(iterations):
             optimiser.zero_grad()
             key = random.choice(list(data.keys()))
-            caption = random.choice(data[key]["captions"])
+            print(key)
+            caption = torch.stack([torch.Tensor(i) for i in random.choice(data[key]["captions"])]).unsqueeze(0)
             predicted_output, hidden_output = self.forward(data[key]['image'], caption)
+            print(caption.shape)
+            print(predicted_output.shape)
             loss = loss_fn(caption, predicted_output)
-            self.backward(self.training_data.binary_cross_entropy_prime(caption, predicted_output))
+            print("loss calculated")
             loss.backward()
+            print("RNN backward done")
+            # self.backward(self.training_data.binary_cross_entropy_prime(caption.numpy(),
+            #                                                             predicted_output.detach().numpy()))
+            # print("CNN backward done")
             optimiser.step()
+            print("Optimizing done")
 
-    def test(self):
+    def generate_caption(self):
         pass

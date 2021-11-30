@@ -1,4 +1,7 @@
 from data.processing import Processor
+from networks.net import CaptionGenerator
+import pickle
+import os.path
 
 # dat = processor.data
 #
@@ -48,12 +51,24 @@ from data.processing import Processor
 #     t_final = flatten.forward(t9)
 #     processedFeatures[k] = t_final
 #
-processor = Processor()
+if not os.path.isfile('data.json'):
 
-print("Processing Captions")
-processor.caption_reader()
-print("Captions processed")
+    processor = Processor()
 
-print("Pre Processing Images")
-processor.process_images()
-print("Images pre processed")
+    print("Processing Captions")
+    processor.caption_reader()
+    print("Captions processed")
+
+    print("Pre Processing Images")
+    processor.process_images()
+    print("Images pre processed")
+
+    print("Writing data into json file")
+    with open('data.json', 'wb') as file:
+        pickle.dump(processor.data, file)
+
+print("Reading data from json file")
+with open('data.json', 'rb') as file:
+    data = pickle.load(file)
+caption_generator = CaptionGenerator()
+caption_generator.train_cnn()
