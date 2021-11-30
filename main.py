@@ -1,4 +1,4 @@
-from data_processing import Processor
+from data.processing import Processor
 
 # dat = processor.data
 #
@@ -9,6 +9,7 @@ from data_processing import Processor
 # processedFeatures = {}
 #
 # '''Running CNN for test images'''
+
 # input_dimensions = (3, 112, 112)
 # for k in dat:
 #     print('Creating features for ' + k)
@@ -46,16 +47,13 @@ from data_processing import Processor
 #
 #     t_final = flatten.forward(t9)
 #     processedFeatures[k] = t_final
+#
+processor = Processor()
 
-if __name__ == "__main__":
-    processor = Processor()
+print("Processing Captions")
+processor.caption_reader()
+print("Captions processed")
 
-    print("Processing Captions")
-    processor.caption_reader()
-    print("Captions processed")
-
-    print("Pre Processing Images")
-    processor.process_images()
-    print("Images pre processed")
-
-    print(processor.data)
+print("Pre Processing Images")
+processor.process_images()
+print("Images pre processed")

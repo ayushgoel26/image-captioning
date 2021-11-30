@@ -110,7 +110,6 @@ class Processor:
         word_list.append("endseq")
         word_list.insert(0, "startseq")
         # remove hanging words and punctuations
-        # word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
         word_list = [word for word in word_list if len(word) > 1 or word not in self.punctuations]
         # print(word_list)
         return word_list
