@@ -1,4 +1,6 @@
 import string
+
+import gensim.models
 from PIL import Image
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
@@ -62,10 +64,10 @@ class Processor:
             count += 1
             if count == 1500:
                 break
-        self.word_to_vector()
+        self.generate_word_vectors()
         self.vectoriser()
 
-    def word_to_vector(self):
+    def generate_word_vectors(self):
         """
         Learning word embedding from our text corpus
         """
@@ -75,7 +77,6 @@ class Processor:
         self.vocabulary = list(self.model.wv.vocab)
         print("Vocabulary length ->", len(self.vocabulary))
         self.model.save('model.bin')  # save the word to vector model
-        # self.visualize_word_embedding()
 
     def visualize_word_embedding(self):
         """
@@ -135,19 +136,19 @@ class Processor:
             image_resize = np.true_divide(image_resize, 255)  # normalization : diving values by 255
             self.data[key]['image'] = image_resize  # storing the image in the dictionary
 
-    @staticmethod
-    def preprocessing_data_mnist(train_data, limit):
-        """
-        This returns processed training data for MNIST
-        """
-        for batch_idx, (data, target) in enumerate(train_data):
-            zero_index = np.where(y == 0)[0][:limit]
-            one_index = np.where(y == 1)[0][:limit]
-            all_indices = np.hstack((zero_index, one_index))
-            all_indices = np.random.permutation(all_indices)
-            x, y = x[all_indices], y[all_indices]
-            x = x.reshape(len(x), 1, 28, 28)
-            x = x.astype("float32") / 255
-            y = np_utils.to_categorical(y)
-            y = y.reshape(2, len(y))
-            return x, y
+    # @staticmethod
+    # def preprocessing_data_mnist(train_data, limit):
+    #     """
+    #     This returns processed training data for MNIST
+    #     """
+    #     for batch_idx, (data, target) in enumerate(train_data):
+    #         zero_index = np.where(y == 0)[0][:limit]
+    #         one_index = np.where(y == 1)[0][:limit]
+    #         all_indices = np.hstack((zero_index, one_index))
+    #         all_indices = np.random.permutation(all_indices)
+    #         x, y = x[all_indices], y[all_indices]
+    #         x = x.reshape(len(x), 1, 28, 28)
+    #         x = x.astype("float32") / 255
+    #         y = np_utils.to_categorical(y)
+    #         y = y.reshape(2, len(y))
+    #         return x, y

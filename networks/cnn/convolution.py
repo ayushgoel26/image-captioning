@@ -13,13 +13,15 @@ class Convolution:
         self.input_depth = input_shape[0]
         input_height = input_shape[1]
         input_width = input_shape[2]
-        self.kernels = np.random.randn(*self.kernels_shape)
         self.output_shape = (self.depth, input_height - self.kernels_shape[2] + 1, input_width - self.kernels_shape[3] + 1)
-        self.biases = np.random.randn(*self.output_shape)
-        self.output = np.copy(self.biases)
 
     def forward(self, input_vec):
         self.input = input_vec
+        self.biases = np.random.randn(*self.output_shape)
+        self.output = np.copy(self.biases)
+        self.kernels = np.random.randn(*self.kernels_shape)
+
+
         for i in range(self.depth):
             for j in range(self.input_depth):
                 self.output[i] += signal.correlate2d(self.input[j], self.kernels[i, j], "valid")
