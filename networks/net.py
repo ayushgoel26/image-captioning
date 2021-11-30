@@ -99,7 +99,7 @@ class CaptionGenerator:
         error = 0
         for x, y in zip(x_train, y_train):
             predicted_output = self.forward(x)
-            error += training_data.binary_cross_entropy(y, predicted_output)
+            #error += training_data.binary_cross_entropy(y, predicted_output)
             grad = training_data.binary_cross_entropy_prime(y, predicted_output)
             self.backward(grad)
             break
