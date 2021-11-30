@@ -35,11 +35,11 @@ class TrainData:
     @staticmethod
     def getTrainData():
         #read tensor data for x_train and y_train from .csv in 
-        x_train_csv = pd.read_csv('../MNIST_training/mnist_x_train.csv')
-        y_train_csv = pd.read_csv('../MNIST_training/mnist_y_train.csv')
+        x_train = torch.load('MNIST_training/mnist_x_train.csv')
+        y_train = torch.load('MNIST_training/mnist_y_train.csv')
 
-        x_train = torch.tensor(x_train_csv.values)
-        y_train = torch.tensor(y_train_csv.values)
+        # x_train = torch.tensor(x_train_csv.values())
+        # y_train = torch.tensor(y_train_csv.values())
 
 
         #convert x_train and y_train to tensors
@@ -56,8 +56,8 @@ class TrainData:
 
         # we need only 1000 images as 60000 will take time
         #convert x_train and y_train to tensors
-        x_train = torch.tensor(x_train)
-        y_train = torch.tensor(y_train)
+        # x_train = torch.tensor(x_train)
+        # y_train = torch.tensor(y_train)
         y_train = y_train.resize_(1000)
 
         #x_train shape is 60000 * (28 * 28)
@@ -66,9 +66,9 @@ class TrainData:
         # we want to increase the shape to 60000 * (3 * 112 * 112)
 
         #we want 1000 images
-        for index in range(0,1000):
+        for index in range(0, 1000):
             #index refers to each image
-            temp = x_train[index].flatten(); # after flatten the dimensions are 28 * 28
+            temp = x_train[index].flatten()     # after flatten the dimensions are 28 * 28
 
             #for increasing dimensions, we are appending to dummy zero array  
             dummy_zero = torch.zeros(3*112*112 - (28*28)) # want a dummy 0 array of size (3 * 112 * 112) - (28 * 28) as we want to append 28 * 28 flattened array

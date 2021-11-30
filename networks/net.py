@@ -49,22 +49,22 @@ class CaptionGenerator:
 
     def forward(self, image_vector):
         conv_out = self.convolution_layer_1.forward(image_vector)
-        conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
+        conv_out = np.reshape(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_1.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
 
         conv_out = self.convolution_layer_2.forward(max_pool_out)
-        conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
+        conv_out = np.reshape(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_2.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
 
         conv_out = self.convolution_layer_3.forward(max_pool_out)
-        conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
+        conv_out = np.reshape(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_3.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
 
         conv_out = self.convolution_layer_4.forward(max_pool_out)
-        conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
+        conv_out = np.reshape(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_4.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
         cnn_out = self.flatten.forward(self.convolution_layer_5.forward(max_pool_out))
@@ -102,7 +102,7 @@ class CaptionGenerator:
             #error += training_data.binary_cross_entropy(y, predicted_output)
             grad = training_data.binary_cross_entropy_prime(y, predicted_output)
             self.backward(grad)
-            break
+            print(predicted_output)
 
     def train_rnn(self, data, iterations):
         error = 0
