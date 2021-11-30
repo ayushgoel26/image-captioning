@@ -54,7 +54,7 @@ class Processor:
             next(reader)  # ignore header line
             for row in reader:  # add data to dictionary
                 # row[0] itself has all the fields hence need to split wrt '|'
-                # eg row[0] = 1000092795.jpg| 0| Two young guys with shaggy hair look at their hands while hanging out in the yard .
+                # eg row[0] = 1000092795.jpg| 0| Two young guys with shaggy hair look at their....
                 line = row[0].split('|')
                 # in some cases split doesnt create length 3 meaning bad data
                 if len(line) < 3:
@@ -114,7 +114,6 @@ class Processor:
         word_list.append("endseq")
         word_list.insert(0, "startseq")
         # remove hanging words and punctuations
-        # word_list = [self.get_word_embedding(word) for word in word_list if len(word) > 1 or word not in self.punctuations]
         word_list = [word for word in word_list if len(word) > 1 or word not in self.punctuations]
         # print(word_list)
         return word_list

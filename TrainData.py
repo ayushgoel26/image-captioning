@@ -1,4 +1,4 @@
-from data_processing import Processor
+from data import Processor
 import numpy as np
 from keras.datasets import mnist
 

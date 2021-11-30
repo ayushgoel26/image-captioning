@@ -1,15 +1,17 @@
 import numpy as np
-from networks.CNN.Convolution import Convolution
-from networks.CNN.Flatten import Flatten
-from networks.CNN.Maxpool import Maxpool
-from TrainData import TrainData
 import torch.nn as nn
 import torch.optim as optim
 import random
+from networks.cnn.convolution import Convolution
+from networks.cnn.flatten import Flatten
+from networks.cnn.maxpool import Maxpool
+from TrainData import TrainData
+import torch
 from conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
     CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN
 
-class CNN:
+
+class CaptionGenerator:
     def __init__(self):
         input_shapes = [[IN_CHANNEL[0], 112, 112], [IN_CHANNEL[1], 56, 56], [IN_CHANNEL[2], 28, 28],
                         [IN_CHANNEL[3], 14, 14], [IN_CHANNEL[4], 7, 7]]
@@ -42,7 +44,7 @@ class CNN:
         self.learning_rate = LEARNING_RATE
         self.training_data = TrainData()
 
-    def forward(self, image_vector):
+    def forward(self, image_vector, caption_vector):
         conv_out = self.convolution_layer_1.forward(image_vector)
         conv_out = np.resize(conv_out, (conv_out.shape[1], conv_out.shape[2], conv_out.shape[0]))
         max_pool_out = self.max_pool_layer_1.forward(conv_out)
@@ -64,7 +66,7 @@ class CNN:
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
         cnn_out = self.flatten.forward(self.convolution_layer_5.forward(max_pool_out))
 
-        lstm_out, hidden = self.rnn(input=[], hidden=cnn_out)
+        lstm_out, hidden = self.rnn(input=caption_vector, hidden=cnn_out)
         return lstm_out, hidden
 
     def backward(self, compressed_image_vector):
@@ -73,15 +75,15 @@ class CNN:
         derivative = np.reshape(derivative, (derivative.shape[1], derivative.shape[2], derivative.shape[0]))
         derivative = self.max_pool_layer_4.backward(derivative)
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
-        derivative = self.convolution_layer_4.backward(derivative,self.learning_rate)
+        derivative = self.convolution_layer_4.backward(derivative, self.learning_rate)
         derivative = np.reshape(derivative, (derivative.shape[1], derivative.shape[2], derivative.shape[0]))
         derivative = self.max_pool_layer_3.backward(derivative)
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
-        derivative = self.convolution_layer_3.backward(derivative,self.learning_rate)
+        derivative = self.convolution_layer_3.backward(derivative, self.learning_rate)
         derivative = np.reshape(derivative, (derivative.shape[1], derivative.shape[2], derivative.shape[0]))
         derivative = self.max_pool_layer_2.backward(derivative)
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
-        derivative = self.convolution_layer_2.backward(derivative,self.learning_rate)
+        derivative = self.convolution_layer_2.backward(derivative, self.learning_rate)
         derivative = np.reshape(derivative, (derivative.shape[1], derivative.shape[2], derivative.shape[0]))
         derivative = self.max_pool_layer_1.backward(derivative)
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
@@ -89,13 +91,17 @@ class CNN:
 
     def train(self, data, iterations):
         error = 0
+        loss_fn = torch.nn.CrossEntropyLoss()
+        optimiser = optim.Adam(self.rnn.parameters(), lr=LEARNING_RATE)
         for iteration in range(iterations):
+            optimiser.zero_grad()
             key = random.choice(list(data.keys()))
             caption = random.choice(data[key]["captions"])
-            predicted_output = self.forward(data[key]['image'])
-            error += self.training_data.binary_cross_entropy(y, predicted_output)
-            self.backward(self.training_data.binary_cross_entropy_prime(y, predicted_output))
-            break
+            predicted_output, hidden_output = self.forward(data[key]['image'], caption)
+            loss = loss_fn(caption, predicted_output)
+            self.backward(self.training_data.binary_cross_entropy_prime(caption, predicted_output))
+            loss.backward()
+            optimiser.step()
 
     def test(self):
         pass

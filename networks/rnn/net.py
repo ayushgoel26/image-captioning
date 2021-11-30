@@ -34,7 +34,7 @@ class RNN(object):
 
 
 rnn = RNN(input_dim=25088, hidden_rnn_dim=30000)
-from data_processing import Processor
+from data import Processor
 processor = Processor()
 print("Processing Captions")
 processor.caption_reader()
