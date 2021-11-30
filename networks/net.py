@@ -5,6 +5,7 @@ from networks.CNN.Maxpool import Maxpool
 from TrainData import TrainData
 import torch.nn as nn
 import torch.optim as optim
+import random
 from conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
     CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN
 
@@ -89,10 +90,12 @@ class CNN:
     def train(self, data, iterations):
         error = 0
         for iteration in range(iterations):
-            for key in data:
-                predicted_output = self.forward(data[key]['image'])
-                error += self.training_data.binary_cross_entropy(y, predicted_output)
-                self.backward(self.training_data.binary_cross_entropy_prime(y, predicted_output))
+            key = random.choice(list(data.keys()))
+            caption = random.choice(data[key]["captions"])
+            predicted_output = self.forward(data[key]['image'])
+            error += self.training_data.binary_cross_entropy(y, predicted_output)
+            self.backward(self.training_data.binary_cross_entropy_prime(y, predicted_output))
+            break
 
     def test(self):
         pass
