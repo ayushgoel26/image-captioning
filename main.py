@@ -1,3 +1,5 @@
+import gensim.models
+
 from data.processing import Processor
 from networks.net import CaptionGenerator
 import pickle
@@ -51,10 +53,8 @@ import os.path
 #     t_final = flatten.forward(t9)
 #     processedFeatures[k] = t_final
 #
-if not os.path.isfile('data.json'):
-
-    processor = Processor()
-
+processor = Processor()
+if not os.path.isfile('data/data.json'):
     print("Processing Captions")
     processor.caption_reader()
     print("Captions processed")
@@ -64,11 +64,16 @@ if not os.path.isfile('data.json'):
     print("Images pre processed")
 
     print("Writing data into json file")
-    with open('data.json', 'wb') as file:
+    with open('data/data.json', 'wb') as file:
         pickle.dump(processor.data, file)
 
-print("Reading data from json file")
-with open('data.json', 'rb') as file:
-    data = pickle.load(file)
-caption_generator = CaptionGenerator()
-caption_generator.train_cnn()
+else:
+    print("Reading data from json file")
+    with open('data/data.json', 'rb') as file:
+        processor.data = pickle.load(file)
+    processor.model = gensim.models.Word2Vec.load('model.bin')
+# processor.visualize_word_embedding()
+
+caption_generator = CaptionGenerator(processor)
+caption_generator.get_word([0])
+# caption_generator.train_cnn()

@@ -2,17 +2,19 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import random
+import torch
+from data.processing import Processor
 from networks.cnn.convolution import Convolution
 from networks.cnn.flatten import Flatten
 from networks.cnn.maxpool import Maxpool
-from TrainData import TrainData
-import torch
+from networks.loss import binary_cross_entropy, binary_cross_entropy_prime
+from torchvision import datasets
 from conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
     CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN
 
 
 class CaptionGenerator:
-    def __init__(self):
+    def __init__(self, processor):
         input_shapes = [[IN_CHANNEL[0], 112, 112], [IN_CHANNEL[1], 56, 56], [IN_CHANNEL[2], 28, 28],
                         [IN_CHANNEL[3], 14, 14], [IN_CHANNEL[4], 7, 7]]
 
@@ -43,9 +45,9 @@ class CaptionGenerator:
         self.linear = nn.Linear(HIDDEN_DIMENSION_RNN, INPUT_DIMENSION_RNN)
         self.flatten = Flatten()
         self.learning_rate = LEARNING_RATE
-        self.training_data = TrainData()
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
+        self.processor = processor
 
     def forward(self, image_vector):
         conv_out = self.convolution_layer_1.forward(image_vector)
@@ -68,9 +70,6 @@ class CaptionGenerator:
         max_pool_out = self.max_pool_layer_4.forward(conv_out)
         max_pool_out = np.reshape(max_pool_out, (max_pool_out.shape[2], max_pool_out.shape[0], max_pool_out.shape[1]))
         cnn_out = self.flatten.forward(self.convolution_layer_5.forward(max_pool_out))
-        # lstm_out, hidden = self.rnn(caption_vector.float(), (torch.from_numpy(cnn_out).unsqueeze(0).float(),
-        #                                                      torch.from_numpy(cnn_out).unsqueeze(0).float()))
-        # lstm_out = self.linear(lstm_out)
         return cnn_out
 
     def backward(self, compressed_image_vector):
@@ -94,13 +93,12 @@ class CaptionGenerator:
         self.convolution_layer_1.backward(derivative, self.learning_rate)
 
     def train_cnn(self):
-        training_data = TrainData()
-        x_train, y_train = training_data.getTrainData()
+        x_train, y_train = self.getTrainData()
         error = 0
         for x, y in zip(x_train, y_train):
             predicted_output = self.forward(x)
-            error += training_data.binary_cross_entropy(y, predicted_output)
-            grad = training_data.binary_cross_entropy_prime(y, predicted_output)
+            error += binary_cross_entropy(y, predicted_output)
+            grad = binary_cross_entropy_prime(y, predicted_output)
             self.backward(grad)
             break
 
@@ -114,6 +112,9 @@ class CaptionGenerator:
             print(key)
             caption = torch.stack([torch.Tensor(i) for i in random.choice(data[key]["captions"])]).unsqueeze(0)
             predicted_output, hidden_output = self.forward(data[key]['image'], caption)
+            # predicted_output, hidden_output = self.rnn(caption_vector.float(), (torch.from_numpy(cnn_out).unsqueeze(0).float(),
+            #                                            torch.from_numpy(cnn_out).unsqueeze(0).float()))
+            # predicted_output = self.linear(lstm_out)
             print(caption.shape)
             print(predicted_output.shape)
             loss = loss_fn(caption, predicted_output)
@@ -126,5 +127,43 @@ class CaptionGenerator:
             optimiser.step()
             print("Optimizing done")
 
+    def getTrainData(self):
+        training_data_size = 100
+        input_dimensions = (3, 112, 112)
+        output_training_dimensions = 512 * 7 * 7
+
+        tmp = 2400
+        data = datasets.MNIST('../data', train=True, download=True)
+        train_loader = torch.utils.data.DataLoader(data)
+
+        x_train, y_train = self.processor.preprocessing_data_mnist(train_loader, tmp)
+        x_train = np.reshape(x_train, np.append(training_data_size, input_dimensions))
+        y_train = np.reshape(y_train, (1, y_train.shape[0] * y_train.shape[1]))
+        y_train = np.resize(y_train, (1, output_training_dimensions))
+
+        return x_train, y_train
+
     def generate_caption(self):
-        pass
+        image_features = self.forward(input)
+        sentence = []
+        pred_word_vec, hidden_out = self.rnn(Processor.get_word_embedding('startseq')
+                                             (torch.from_numpy(image_features).unsqueeze(0).float(),
+                                              torch.from_numpy(image_features).unsqueeze(0).float()))
+        word = self.get_word(pred_word_vec)
+        sentence.append(word)
+        while word != 'endseq' or len(sentence) <= 25:
+            pred_word_vec, hidden_out = self.rnn(pred_word_vec,
+                                                 (torch.from_numpy(hidden_out).unsqueeze(0).float(),
+                                                  torch.from_numpy(hidden_out).unsqueeze(0).float()))
+            word = self.get_word(pred_word_vec)
+            sentence.append(word)
+
+    def get_word(self, word_vec):
+        words = []
+        word_vectors = []
+        for k in self.processor.model.wv.vocab:
+            words.append(k)
+            word_vectors.append(torch.from_numpy(self.processor.model[k]))
+        print(len(words))
+        print(len(word_vectors))
+        return []
