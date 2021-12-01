@@ -1,6 +1,5 @@
 import string
 
-import gensim.models
 from PIL import Image
 import numpy as np
 from nltk.tokenize import RegexpTokenizer
@@ -10,7 +9,6 @@ import requests
 from io import BytesIO
 from conf import WORD_VECTORS_FILE
 
-# from keras.utils import np_utils
 
 class Processor:
     """
@@ -37,6 +35,8 @@ class Processor:
         self.captions_list = []
         self.vocabulary = None
         self.model = None
+        self.words = None
+        self.word_vectors = None
 
     # def word_vec_reader(self):
     #     print('Reading Glove Vectors')
@@ -77,6 +77,13 @@ class Processor:
         self.vocabulary = list(self.model.wv.vocab)
         print("Vocabulary length ->", len(self.vocabulary))
         self.model.save(WORD_VECTORS_FILE)  # save the word to vector model
+
+    def get_list_word_vecs(self):
+        self.words = []
+        self.word_vectors = []
+        for k in self.model.wv.vocab:
+            self.words.append(k)
+            self.word_vectors.append(torch.from_numpy(self.processor.model[k]))
 
     def visualize_word_embedding(self):
         """
@@ -135,20 +142,3 @@ class Processor:
             image_resize = np.resize(image, (3, 112, 112))
             image_resize = np.true_divide(image_resize, 255)  # normalization : diving values by 255
             self.data[key]['image'] = image_resize  # storing the image in the dictionary
-
-    # @staticmethod
-    # def preprocessing_data_mnist(train_data, limit):
-    #     """
-    #     This returns processed training data for MNIST
-    #     """
-    #     for batch_idx, (data, target) in enumerate(train_data):
-    #         zero_index = np.where(y == 0)[0][:limit]
-    #         one_index = np.where(y == 1)[0][:limit]
-    #         all_indices = np.hstack((zero_index, one_index))
-    #         all_indices = np.random.permutation(all_indices)
-    #         x, y = x[all_indices], y[all_indices]
-    #         x = x.reshape(len(x), 1, 28, 28)
-    #         x = x.astype("float32") / 255
-    #         y = np_utils.to_categorical(y)
-    #         y = y.reshape(2, len(y))
-    #         return x, y
