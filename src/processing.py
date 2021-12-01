@@ -37,6 +37,7 @@ class Processor:
         self.model = None
         self.words = None
         self.word_vectors = None
+        self.get_list_word_vecs()
 
     # def word_vec_reader(self):
     #     print('Reading Glove Vectors')

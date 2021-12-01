@@ -3,7 +3,7 @@ import os.path
 from gensim.models import Word2Vec
 from data.processing import Processor
 from networks.net import CaptionGenerator
-from conf import WORD_VECTORS_FILE
+from conf import WORD_VECTORS_FILE, PROCESSED_DATA_FILE
 
 processor = Processor()
 if not os.path.isfile('data/data.json'):
@@ -16,12 +16,12 @@ if not os.path.isfile('data/data.json'):
     print("Images pre processed")
 
     print("Writing data into json file")
-    with open('data/data.json', 'wb') as file:
+    with open(PROCESSED_DATA_FILE, 'wb') as file:
         pickle.dump(processor.data, file)
 
 else:
     print("Reading data from json file")
-    with open('data/data.json', 'rb') as file:
+    with open(PROCESSED_DATA_FILE, 'rb') as file:
         processor.data = pickle.load(file)
     processor.model = Word2Vec.load(WORD_VECTORS_FILE)
 # processor.visualize_word_embedding()
@@ -29,3 +29,4 @@ else:
 caption_generator = CaptionGenerator(processor)
 # caption_generator.train_cnn(10)
 caption_generator.get_word([0])
+caption_generator.save_cnn_parameters()

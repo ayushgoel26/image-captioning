@@ -22,3 +22,5 @@ HIDDEN_DIMENSION_RNN = 25088  # CNN output size
 
 # model image path
 WORD_VECTORS_FILE = "data/word_vectors"
+CNN_PARAMETERS_FILE = "data/cnn_parameters"
+PROCESSED_DATA_FILE = "data/data.json"

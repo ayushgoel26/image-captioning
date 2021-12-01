@@ -9,10 +9,8 @@ from data.processing import Processor
 from networks.cnn.convolution import Convolution
 from networks.cnn.flatten import Flatten
 from networks.cnn.maxpool import Maxpool
-from networks.loss import binary_cross_entropy, binary_cross_entropy_prime
-from torchvision import datasets
 from conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
-    CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN
+    CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN, CNN_PARAMETERS_FILE
 
 
 class CaptionGenerator:
@@ -98,12 +96,21 @@ class CaptionGenerator:
         training_data = TrainData()
         x_train, y_train = training_data.getTrainData()
         count = 0
+        print("Starting epoch 1")
         for epoch in range(epochs):
             for x, y in zip(x_train, y_train):
                 predicted_output = self.forward(x)
                 grad = training_data.binary_cross_entropy_prime(y, predicted_output)
                 self.backward(grad)
+                print(count)
+                count += 1
             print("Epoch %d done" %epoch)
+
+    def save_cnn_parameters(self):
+        cnn_parameters = [self.convolution_layer_1, self.max_pool_layer_1, self.convolution_layer_2,
+                          self.max_pool_layer_2, self.convolution_layer_3, self.max_pool_layer_3,
+                          self.convolution_layer_4,self.max_pool_layer_4, self.convolution_layer_5]
+        torch.save(cnn_parameters, CNN_PARAMETERS_FILE)
 
     def train_rnn(self, data, iterations):
         error = 0
