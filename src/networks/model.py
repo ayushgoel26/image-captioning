@@ -94,7 +94,7 @@ class CaptionGenerator:
 
     def train_cnn(self, epochs):
         training_data = TrainData()
-        x_train, y_train = training_data.getTrainData()
+        x_train, y_train = training_data.get_train_data()
         count = 0
         print("Starting epoch 1")
         for epoch in range(epochs):
@@ -104,7 +104,7 @@ class CaptionGenerator:
                 self.backward(grad)
                 print(count)
                 count += 1
-            print("Epoch %d done" %epoch)
+            print("Epoch %d done" % epoch)
 
     def save_cnn_parameters(self):
         cnn_parameters = [self.convolution_layer_1, self.max_pool_layer_1, self.convolution_layer_2,
@@ -112,25 +112,24 @@ class CaptionGenerator:
                           self.convolution_layer_4,self.max_pool_layer_4, self.convolution_layer_5]
         torch.save(cnn_parameters, CNN_PARAMETERS_FILE)
 
-    def train_rnn(self, data, iterations):
-        error = 0
+    def train_rnn(self, iterations):
+        print("Training RNN")
         loss_fn = torch.nn.CrossEntropyLoss()
         optimiser = optim.Adam(self.rnn.parameters(), lr=LEARNING_RATE)
         for iteration in range(iterations):
             optimiser.zero_grad()
-            key = random.choice(list(data.keys()))
+            key = random.choice(list(self.processor.data.keys()))
             print(key)
-            caption = torch.stack([torch.Tensor(i) for i in random.choice(data[key]["captions"])]).unsqueeze(0)
-            predicted_output, hidden_output = self.forward(data[key]['image'], caption)
-            print(caption.shape)
-            print(predicted_output.shape)
+            caption = torch.stack([torch.Tensor(i) for i in
+                                   random.choice(self.processor.data[key]["captions"])]).unsqueeze(0)
+            cnn_output_features = self.forward(self.processor.data[key]['image'])
+            lstm_out, hidden = self.rnn(caption.float(), (torch.from_numpy(cnn_output_features).unsqueeze(0).float(),
+                                                         torch.from_numpy(cnn_output_features).unsqueeze(0).float()))
+            predicted_output = self.linear(lstm_out)
             loss = loss_fn(caption, predicted_output)
             print("loss calculated")
             loss.backward()
             print("RNN backward done")
-            # self.backward(self.training_data.binary_cross_entropy_prime(caption.numpy(),
-            #                                                             predicted_output.detach().numpy()))
-            # print("CNN backward done")
             optimiser.step()
             print("Optimizing done")
 
@@ -150,11 +149,6 @@ class CaptionGenerator:
             sentence.append(word)
 
     def get_word(self, word_vec):
-        words = []
-        word_vectors = []
-        for k in self.processor.model.wv.vocab:
-            words.append(k)
-            word_vectors.append(torch.from_numpy(self.processor.model[k]))
-        print(len(words))
-        print(len(word_vectors))
-        return []
+        word_idx = torch.argmax(torch.nn.CosineSimilarity(dim=2)(word_vec, self.processor.word_vectors))
+        return self.processor.words[word_idx]
+
