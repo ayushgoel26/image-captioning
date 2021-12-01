@@ -130,4 +130,4 @@ dmypy.json
 .pyre/
 
 # files
-data/data.json
+src/data/data.json

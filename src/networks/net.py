@@ -4,12 +4,12 @@ import torch.optim as optim
 import random
 import torch
 
-from TrainData import TrainData
-from data.processing import Processor
-from networks.cnn.convolution import Convolution
-from networks.cnn.flatten import Flatten
-from networks.cnn.maxpool import Maxpool
-from conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
+from src.TrainData import TrainData
+from src.processing import Processor
+from src.networks.cnn.convolution import Convolution
+from src.networks.cnn.flatten import Flatten
+from src.networks.cnn.maxpool import Maxpool
+from src.conf import MAX_POOL_K_SIZE, MAX_POOL_PADDING, MAX_POOL_STRIDE, CONVOLUTION_K_SIZE, CONVOLUTION_PADDING, \
     CONVOLUTION_STRIDE, OUT_CHANNEL, IN_CHANNEL, LEARNING_RATE, INPUT_DIMENSION_RNN, HIDDEN_DIMENSION_RNN, CNN_PARAMETERS_FILE
 
 

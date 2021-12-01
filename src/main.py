@@ -1,8 +1,8 @@
 import pickle
 import os.path
 from gensim.models import Word2Vec
-from data.processing import Processor
-from networks.net import CaptionGenerator
+from processing import Processor
+from src.networks.net import CaptionGenerator
 from conf import WORD_VECTORS_FILE, PROCESSED_DATA_FILE
 
 processor = Processor()
