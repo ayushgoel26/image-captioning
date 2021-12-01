@@ -29,4 +29,5 @@ else:
 
 caption_generator = CaptionGenerator(processor)
 # caption_generator.get_word([0])
-caption_generator.train_cnn(10)
+caption_generator.train_cnn(1)
+caption_generator.save_cnn_parameters()
