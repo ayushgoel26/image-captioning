@@ -94,17 +94,16 @@ class CaptionGenerator:
         derivative = np.reshape(derivative, (derivative.shape[2], derivative.shape[0], derivative.shape[1]))
         self.convolution_layer_1.backward(derivative, self.learning_rate)
 
-
-    def train_cnn(self):
+    def train_cnn(self, epochs):
         training_data = TrainData()
         x_train, y_train = training_data.getTrainData()
-        error = 0
-        for x, y in zip(x_train, y_train):
-            predicted_output = self.forward(x)
-            #error += training_data.binary_cross_entropy(y, predicted_output)
-            grad = training_data.binary_cross_entropy_prime(y, predicted_output)
-            self.backward(grad)
-            print(predicted_output)
+        count = 0
+        for epoch in range(epochs):
+            for x, y in zip(x_train, y_train):
+                predicted_output = self.forward(x)
+                grad = training_data.binary_cross_entropy_prime(y, predicted_output)
+                self.backward(grad)
+            print("Epoch %d done" %epoch)
 
     def train_rnn(self, data, iterations):
         error = 0
@@ -127,23 +126,6 @@ class CaptionGenerator:
             # print("CNN backward done")
             optimiser.step()
             print("Optimizing done")
-
-    # def getTrainData(self):
-    #     training_data_size = 100
-    #     input_dimensions = (3, 112, 112)
-    #     output_training_dimensions = 512 * 7 * 7
-    #
-    #     tmp = 2400
-    #     data = datasets.MNIST('../data', train=True, download=True)
-    #     train_loader = torch.utils.data.DataLoader(data)
-    #
-    #     x_train, y_train = self.processor.preprocessing_data_mnist(train_loader, tmp)
-    #     x_train = np.reshape(x_train, np.append(training_data_size, input_dimensions))
-    #     y_train = np.reshape(y_train, (1, y_train.shape[0] * y_train.shape[1]))
-    #     y_train = np.resize(y_train, (1, output_training_dimensions))
-    #
-    #     return x_train, y_train
-
 
     def generate_caption(self):
         image_features = self.forward(input)

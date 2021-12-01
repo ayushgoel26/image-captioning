@@ -19,3 +19,6 @@ OUT_CHANNEL = [64, 128, 254, 512, 512]
 # RNN CONFIGURATION
 INPUT_DIMENSION_RNN = 100
 HIDDEN_DIMENSION_RNN = 25088  # CNN output size
+
+# model image path
+WORD_VECTORS_FILE = "data/word_vectors"

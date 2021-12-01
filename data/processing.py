@@ -8,7 +8,7 @@ import torch
 from gensim.models import Word2Vec
 import requests
 from io import BytesIO
-
+from conf import WORD_VECTORS_FILE
 
 # from keras.utils import np_utils
 
@@ -76,7 +76,7 @@ class Processor:
         print("Word to Vector model ->", self.model)
         self.vocabulary = list(self.model.wv.vocab)
         print("Vocabulary length ->", len(self.vocabulary))
-        self.model.save('model.bin')  # save the word to vector model
+        self.model.save(WORD_VECTORS_FILE)  # save the word to vector model
 
     def visualize_word_embedding(self):
         """

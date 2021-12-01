@@ -77,3 +77,6 @@ class TrainData:
             x_train_dims_increased[index] = expanded_array
 
         return x_train_dims_increased.numpy(), y_train.numpy()
+
+    def binary_cross_entropy(self, y, predicted_output):
+        pass
