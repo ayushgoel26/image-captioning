@@ -1,32 +1,18 @@
-import pickle
-import os.path
-from gensim.models import Word2Vec
 from processing import Processor
-from src.networks.net import CaptionGenerator
-from conf import WORD_VECTORS_FILE, PROCESSED_DATA_FILE
+from src.networks.model import CaptionGenerator
 
 processor = Processor()
-if not os.path.isfile('data/data.json'):
-    print("Processing Captions")
-    processor.caption_reader()
-    print("Captions processed")
 
-    print("Pre Processing Images")
-    processor.process_images()
-    print("Images pre processed")
+print("Processing Captions")
+processor.caption_reader()  # reading and cleaning captions
+print("Captions processed")
 
-    print("Writing data into json file")
-    with open(PROCESSED_DATA_FILE, 'wb') as file:
-        pickle.dump(processor.data, file)
+print("Pre Processing Images")
+processor.process_images()  # reading and pre processing images
+print("Images pre processed")
 
-else:
-    print("Reading data from json file")
-    with open(PROCESSED_DATA_FILE, 'rb') as file:
-        processor.data = pickle.load(file)
-    processor.model = Word2Vec.load(WORD_VECTORS_FILE)
-# processor.visualize_word_embedding()
-
-caption_generator = CaptionGenerator(processor)
-# caption_generator.train_cnn(10)
-caption_generator.get_word([0])
-caption_generator.save_cnn_parameters()
+processor.visualize_word_embedding()    # visualizing the word to vectors created
+caption_generator = CaptionGenerator(processor)     # making object for the testing and training class
+caption_generator.train_cnn(1)  # training the CNN
+caption_generator.save_cnn_parameters()     # saving the CNN Parameters
+caption_generator.train_rnn(1) # Training the RNN with the trained CNN output

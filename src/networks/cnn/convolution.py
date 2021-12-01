@@ -3,6 +3,9 @@ import numpy as np
 
 
 class Convolution:
+    """
+    Finds features in an image
+    """
     def __init__(self, in_channels, out_channels, kernel_size, padding, stride, input_shape):
         self.depth = out_channels
         self.input = None
@@ -13,14 +16,22 @@ class Convolution:
         self.input_depth = input_shape[0]
         input_height = input_shape[1]
         input_width = input_shape[2]
-        self.output_shape = (self.depth, input_height - self.kernels_shape[2] + 1, input_width - self.kernels_shape[3] + 1)
+        self.output_shape = (self.depth, input_height - self.kernels_shape[2] + 1,
+                             input_width - self.kernels_shape[3] + 1)
+        self.biases = None
+        self.kernels = None
+        self.output = None
 
     def forward(self, input_vec):
+        """
+        forward pass of the convolution layer
+        :param input_vec: Image vector
+        :return:
+        """
         self.input = input_vec
-        self.biases = np.random.randn(*self.output_shape)
+        self.biases = np.random.randn(self.output_shape)
         self.output = np.copy(self.biases)
-        self.kernels = np.random.randn(*self.kernels_shape)
-
+        self.kernels = np.random.randn(self.kernels_shape)
 
         for i in range(self.depth):
             for j in range(self.input_depth):
@@ -28,8 +39,14 @@ class Convolution:
         return self.output
 
     def backward(self, output_gradient, learning_rate):
-        dI = np.zeros(self.input_shape) #input_gradient
-        dK = np.zeros(self.kernels_shape) #kernel_grad
+        """
+        backward pass of the convolution layer
+        :param output_gradient: output vector from previous layer
+        :param learning_rate: learning rate for the layer
+        :return: gradiant vector
+        """
+        dI = np.zeros(self.input_shape)     # input_gradient
+        dK = np.zeros(self.kernels_shape)   # kernel_grad
         for i in range(self.depth):
             for j in range(self.input_depth):
                 dK[i, j] = signal.correlate2d(self.input[j], output_gradient[i], "valid")

@@ -3,6 +3,9 @@ import torch
 
 
 class GatedRecurrentUnit:
+    """
+    Code for the gated recurrent unit cell
+    """
     def __init__(self, previous_hidden_size, input_size):
         self.previous_hidden_size = previous_hidden_size
         self.input_size = input_size
@@ -28,6 +31,12 @@ class GatedRecurrentUnit:
         self.bias_candidate_activation = torch.rand(self.previous_hidden_size)
 
     def forward_pass(self, previous_hidden_state, input_vector):
+        """
+        calculate the forward pass
+        :param previous_hidden_state: vector of previous hidden state
+        :param input_vector: input vector for word
+        :return: the output from the GRU
+        """
         # calculate the vector for update gate
         update_gate_vector = torch.sigmoid(torch.matmul(input_vector, self.weight_input_update_gate) +
                                            torch.matmul(previous_hidden_state,
